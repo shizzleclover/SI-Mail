@@ -13,6 +13,8 @@
     --primary-rgb: 79, 70, 229;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --success-bg: rgba(40, 167, 69, 0.1);
+    --danger-dark: #c82333;
 }
 
 [data-theme="dark"] {
@@ -809,5 +811,119 @@ body {
 
 main {
     flex: 1;
+}
+
+.auth-container {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.auth-container h2 {
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-description {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.google-signin-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.google-signin-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.google-signin-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.google-signin-btn i {
+    font-size: 1.2rem;
+}
+
+.auth-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--success-bg);
+    border-radius: 8px;
+    border: 1px solid var(--success);
+}
+
+.auth-status i {
+    color: var(--success);
+    font-size: 1.5rem;
+}
+
+.auth-info {
+    flex: 1;
+}
+
+.auth-info p {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+
+.user-email {
+    font-weight: 500;
+    color: var(--primary);
+}
+
+.signout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.signout-btn:hover {
+    background: var(--danger-dark);
+    transform: translateY(-1px);
+}
+
+.signout-btn:active {
+    transform: translateY(0);
+}
+
+/* Dark theme adjustments */
+[data-theme='dark'] .auth-status {
+    background: rgba(40, 167, 69, 0.15);
 }
  

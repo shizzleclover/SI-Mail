@@ -201,6 +201,226 @@
     </div>
 
     <script>
+        // Make sure these variables are defined at the top
+        let data = null;  // Initialize data variable
+
+        async function sendEmails() {
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressBar = document.getElementById('progressBar');
+            const progressCount = document.getElementById('progressCount');
+
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+
+            try {
+                // Show loading state
+                toggleButtonLoading(true);
+                progressWrapper.style.display = 'block';
+                progressBar.style.width = '0%';
+
+                // Create FormData
+                const formData = new FormData();
+                formData.append('excelFile', document.getElementById('excelFile').files[0]);
+                formData.append('subject', document.getElementById('subject').value.trim());
+                formData.append('messageTemplate', document.getElementById('messageTemplate').value.trim());
+                formData.append('senderEmail', document.getElementById('senderEmail').value.trim());
+                formData.append('senderPassword', document.getElementById('senderPassword').value.trim());
+
+                // Append attachments if any
+                const attachments = document.getElementById('attachments').files;
+                Array.from(attachments).forEach(file => {
+                    formData.append('attachments', file);
+                });
+
+                // Send request
+                const response = await fetch('/send-emails', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to send emails');
+                }
+
+                data = await response.json();  // Assign to the previously declared variable
+
+                if (data.success) {
+                    let completed = 0;
+                    const total = data.results.length;
+                    
+                    // Update initial progress
+                    progressCount.textContent = `0/${total}`;
+                    progressBar.style.width = '0%';
+
+                    // Process each result
+                    for (const result of data.results) {
+                        completed++;
+                        const progress = (completed / total) * 100;
+                        
+                        // Update progress
+                        progressBar.style.width = `${progress}%`;
+                        progressCount.textContent = `${completed}/${total}`;
+
+                        // Show result notification
+                        if (result.status === 'success') {
+                            showToast('success', 'Success', `Email sent to ${result.email}`);
+                        } else if (result.status === 'failed') {
+                            showToast('error', 'Failed', `Failed to send to ${result.email}: ${result.message}`);
+                        } else {
+                            showToast('warning', 'Skipped', `Skipped ${result.email}: ${result.message}`);
+                        }
+
+                        // Small delay between notifications
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                    // Show summary
+                    if (data.summary) {
+                        showToast('success', 'Complete', 
+                            `Sent: ${data.summary.success}, ` +
+                            `Failed: ${data.summary.failed}, ` +
+                            `Skipped: ${data.summary.skipped}`
+                        );
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to send emails');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('error', 'Error', error.message);
+            } finally {
+                // Reset UI
+                toggleButtonLoading(false);
+                setTimeout(() => {
+                    progressWrapper.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
+            }
+        }
+
+        // Make sure all helper functions are defined
+        function toggleButtonLoading(loading) {
+            const button = document.getElementById('sendButton');
+            button.disabled = loading;
+            if (loading) {
+                button.classList.add('loading');
+            } else {
+                button.classList.remove('loading');
+            }
+        }
+
+        function validateForm() {
+            const errors = [];
+            const email = document.getElementById('senderEmail').value.trim();
+            const password = document.getElementById('senderPassword').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const message = document.getElementById('messageTemplate').value.trim();
+            const excelFile = document.getElementById('excelFile').files[0];
+            const attachments = document.getElementById('attachments').files;
+
+            // Email validation
+            if (!email) {
+                errors.push("Email address is required");
+            } else if (!isValidEmail(email)) {
+                errors.push("Please enter a valid email address");
+            } else if (!email.toLowerCase().endsWith('@gmail.com')) {
+                errors.push("Only Gmail addresses are supported");
+            }
+
+            // Password validation - only check if it's empty
+            if (!password) {
+                errors.push("App Password is required");
+            }
+            // Remove the length validation since app passwords can vary
+
+            // Subject validation
+            if (!subject) {
+                errors.push("Email subject is required");
+            }
+
+            // Message validation
+            if (!message) {
+                errors.push("Message template is required");
+            }
+
+            // Excel file validation
+            if (!excelFile) {
+                errors.push("Please upload an Excel file with recipient details");
+            } else {
+                const fileExt = excelFile.name.split('.').pop().toLowerCase();
+                if (!['xlsx', 'xls'].includes(fileExt)) {
+                    errors.push("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
+                }
+                if (excelFile.size > 25 * 1024 * 1024) {
+                    errors.push("Excel file size exceeds 25MB limit");
+                }
+            }
+
+            // Attachments validation
+            let totalSize = 0;
+            Array.from(attachments).forEach(file => {
+                totalSize += file.size;
+            });
+            if (totalSize > 25 * 1024 * 1024) {
+                errors.push("Total attachments size exceeds 25MB limit");
+            }
+
+            if (errors.length > 0) {
+                errors.forEach(error => showToast('error', 'Validation Error', error));
+                return false;
+            }
+
+            return true;
+        }
+
+        function showToast(type, title, message) {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon;
+            switch(type) {
+                case 'error':
+                    icon = 'fa-exclamation-circle';
+                    break;
+                case 'success':
+                    icon = 'fa-check-circle';
+                    break;
+                case 'warning':
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                default:
+                    icon = 'fa-info-circle';
+            }
+            
+            toast.innerHTML = `
+                <i class="fas ${icon} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <div class="toast-progress">
+                    <div class="toast-progress-bar"></div>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove toast after animation
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(String(email).toLowerCase());
+        }
+
         // Add this new code to handle file upload UI
         document.addEventListener('DOMContentLoaded', function() {
             const fileUploadContainer = document.getElementById('fileUploadContainer');
@@ -307,230 +527,6 @@
                 return 'fa-file';
             }
         });
-
-        // Add this function to handle the button state
-        function toggleButtonLoading(loading) {
-            const button = document.getElementById('sendButton');
-            button.disabled = loading;
-            if (loading) {
-                button.classList.add('loading');
-            } else {
-                button.classList.remove('loading');
-            }
-        }
-
-        // Update the sendEmails function
-        async function sendEmails() {
-            const sendButton = document.getElementById('sendButton');
-            const progressWrapper = document.getElementById('progressWrapper');
-            const progressBar = document.getElementById('progressBar');
-            const progressCount = document.getElementById('progressCount');
-
-            // Validate form
-            if (!validateForm()) {
-                return;
-            }
-
-            try {
-                // Show loading state
-                toggleButtonLoading(true);
-                progressWrapper.style.display = 'block';
-                progressBar.style.width = '0%';
-
-                // Create FormData
-                const formData = new FormData();
-                formData.append('excelFile', document.getElementById('excelFile').files[0]);
-                formData.append('subject', document.getElementById('subject').value.trim());
-                formData.append('messageTemplate', document.getElementById('messageTemplate').value.trim());
-                formData.append('senderEmail', document.getElementById('senderEmail').value.trim());
-                formData.append('senderPassword', document.getElementById('senderPassword').value.trim());
-
-                // Append attachments if any
-                const attachments = document.getElementById('attachments').files;
-                Array.from(attachments).forEach(file => {
-                    formData.append('attachments', file);
-                });
-
-                // Send request
-                const response = await fetch('/send-emails', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        throw new Error('Invalid email or app password. Please check your credentials.');
-                    } else {
-                        throw new Error(data.error || 'Failed to send emails');
-                    }
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    let completed = 0;
-                    const total = data.results.length;
-
-                    // Process results
-                    for (const result of data.results) {
-                        completed++;
-                        const progress = (completed / total) * 100;
-                        
-                        // Update progress
-                        progressBar.style.width = `${progress}%`;
-                        progressCount.textContent = `${completed}/${total}`;
-
-                        // Show result notification
-                        if (result.status === 'success') {
-                            showToast('success', 'Success', `Email sent to ${result.email}`);
-                        } else if (result.status === 'failed') {
-                            showToast('error', 'Failed', `Failed to send to ${result.email}: ${result.message}`);
-                        } else {
-                            showToast('warning', 'Skipped', `Skipped ${result.email}: ${result.message}`);
-                        }
-
-                        // Small delay between notifications
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-
-                    // Show summary
-                    showToast('success', 'Complete', 
-                        `Sent: ${data.summary.success}, ` +
-                        `Failed: ${data.summary.failed}, ` +
-                        `Skipped: ${data.summary.skipped}`
-                    );
-                } else {
-                    throw new Error(data.error || 'Failed to send emails');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('error', 'Error', error.message);
-                
-                // Add specific help for authentication errors
-                if (error.message.includes('Invalid email or app password')) {
-                    showToast('info', 'Help', 'Make sure you\'re using an App Password from Google Account settings, not your regular password.');
-                }
-            } finally {
-                // Reset UI
-                toggleButtonLoading(false);
-                setTimeout(() => {
-                    progressWrapper.style.display = 'none';
-                    progressBar.style.width = '0%';
-                }, 1000);
-            }
-        }
-
-        // Add toast notification function if not already present
-        function showToast(type, title, message) {
-            const toastContainer = document.getElementById('toastContainer');
-            
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            let icon;
-            switch(type) {
-                case 'error':
-                    icon = 'fa-exclamation-circle';
-                    break;
-                case 'success':
-                    icon = 'fa-check-circle';
-                    break;
-                case 'warning':
-                    icon = 'fa-exclamation-triangle';
-                    break;
-                default:
-                    icon = 'fa-info-circle';
-            }
-            
-            toast.innerHTML = `
-                <i class="fas ${icon} toast-icon"></i>
-                <div class="toast-content">
-                    <div class="toast-title">${title}</div>
-                    <div class="toast-message">${message}</div>
-                </div>
-                <div class="toast-progress">
-                    <div class="toast-progress-bar"></div>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Remove toast after animation
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
-        }
-
-        // Make sure validateForm function is present
-        function validateForm() {
-            const errors = [];
-            const email = document.getElementById('senderEmail').value.trim();
-            const password = document.getElementById('senderPassword').value.trim();
-            const subject = document.getElementById('subject').value.trim();
-            const message = document.getElementById('messageTemplate').value.trim();
-            const excelFile = document.getElementById('excelFile').files[0];
-            const attachments = document.getElementById('attachments').files;
-
-            // Email validation
-            if (!email) {
-                errors.push("Email address is required");
-            } else if (!isValidEmail(email)) {
-                errors.push("Please enter a valid email address");
-            } else if (!email.toLowerCase().endsWith('@gmail.com')) {
-                errors.push("Only Gmail addresses are supported");
-            }
-
-            // Password validation - only check if it's empty
-            if (!password) {
-                errors.push("App Password is required");
-            }
-            // Remove the length validation since app passwords can vary
-
-            // Subject validation
-            if (!subject) {
-                errors.push("Email subject is required");
-            }
-
-            // Message validation
-            if (!message) {
-                errors.push("Message template is required");
-            }
-
-            // Excel file validation
-            if (!excelFile) {
-                errors.push("Please upload an Excel file with recipient details");
-            } else {
-                const fileExt = excelFile.name.split('.').pop().toLowerCase();
-                if (!['xlsx', 'xls'].includes(fileExt)) {
-                    errors.push("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
-                }
-                if (excelFile.size > 25 * 1024 * 1024) {
-                    errors.push("Excel file size exceeds 25MB limit");
-                }
-            }
-
-            // Attachments validation
-            let totalSize = 0;
-            Array.from(attachments).forEach(file => {
-                totalSize += file.size;
-            });
-            if (totalSize > 25 * 1024 * 1024) {
-                errors.push("Total attachments size exceeds 25MB limit");
-            }
-
-            if (errors.length > 0) {
-                errors.forEach(error => showToast('error', 'Validation Error', error));
-                return false;
-            }
-
-            return true;
-        }
-
-        // Make sure isValidEmail function is present
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(String(email).toLowerCase());
-        }
 
         // Add this to handle file selection display
         document.getElementById('excelFile').addEventListener('change', function(e) {

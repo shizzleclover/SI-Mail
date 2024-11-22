@@ -1,27 +1,18 @@
+const express = require('express');
 const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
-const express = require('express');
-const path = require('path');
-require('dotenv').config();
 const multer = require('multer');
-const fs = require('fs');
-const cors = require('cors');
-
+const path = require('path');
+const fs = require('fs').promises; // Use promises version
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname)
-    }
-});
+// Basic middleware
+app.use(express.json());
+app.use(express.static('public'));
 
+// Configure multer for memory storage instead of disk
 const upload = multer({
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: {
         fileSize: 25 * 1024 * 1024 // 25MB limit
     }
@@ -30,141 +21,78 @@ const upload = multer({
     { name: 'attachments', maxCount: 10 }
 ]);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
-app.use(cors());
-
-// Function to read Excel file
-async function readExcelFile(filePath) {
+// Function to read Excel from buffer
+async function readExcelBuffer(buffer) {
     try {
-        console.log('Reading Excel file from:', filePath);
-        const workbook = XLSX.readFile(filePath);
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(worksheet);
-        console.log('Excel data read successfully:', data.length, 'rows');
-        return data;
+        return XLSX.utils.sheet_to_json(worksheet);
     } catch (error) {
-        console.error('Excel reading error:', error);
         throw new Error('Error reading Excel file: ' + error.message);
     }
 }
 
-// Add these helper functions at the top
-function validateExcelStructure(data) {
-    if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('Excel file is empty or invalid');
-    }
-
-    const firstRow = data[0];
-    const hasEmailColumn = 'email' in firstRow || 'Email' in firstRow;
-    
-    if (!hasEmailColumn) {
-        throw new Error('Excel file must contain an "Email" column');
-    }
-
-    return true;
-}
-
-function sanitizeEmail(email) {
-    return email.trim().toLowerCase();
-}
-
 app.post('/send-emails', async (req, res) => {
-    const uploadedFiles = [];
-    let transporter = null;
-
     try {
-        // Handle upload
+        // Handle file upload
         await new Promise((resolve, reject) => {
             upload(req, res, (err) => {
-                if (err) {
-                    if (err.code === 'LIMIT_FILE_SIZE') {
-                        reject(new Error('File size too large. Maximum size is 25MB'));
-                    } else {
-                        reject(err);
-                    }
-                }
-                resolve();
+                if (err) reject(err);
+                else resolve();
             });
         });
 
-        // Validate request body
-        const { subject, messageTemplate, senderEmail, senderPassword } = req.body;
-
-        if (!subject?.trim()) throw new Error('Email subject is required');
-        if (!messageTemplate?.trim()) throw new Error('Message template is required');
-        if (!senderEmail?.trim()) throw new Error('Sender email is required');
-        if (!senderPassword?.trim()) throw new Error('App password is required');
-
-        // Validate Excel file
-        if (!req.files?.excelFile?.[0]) {
-            throw new Error('Excel file is required');
+        // Validate request
+        if (!req.files?.excelFile?.[0]?.buffer) {
+            throw new Error('No Excel file uploaded');
         }
 
-        const excelFile = req.files.excelFile[0];
-        uploadedFiles.push(excelFile.path);
+        const { subject, messageTemplate, senderEmail, senderPassword } = req.body;
 
-        // Validate file type
-        const allowedTypes = ['.xlsx', '.xls'];
-        const fileExt = path.extname(excelFile.originalname).toLowerCase();
-        if (!allowedTypes.includes(fileExt)) {
-            throw new Error('Invalid file type. Only Excel files (.xlsx, .xls) are allowed');
+        // Validate other fields
+        if (!subject || !messageTemplate || !senderEmail || !senderPassword) {
+            throw new Error('Missing required fields');
+        }
+
+        // Read Excel file from buffer
+        const recipients = await readExcelBuffer(req.files.excelFile[0].buffer);
+        
+        if (!recipients || recipients.length === 0) {
+            throw new Error('No recipients found in Excel file');
         }
 
         // Create email transporter
-        transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: sanitizeEmail(senderEmail),
+                user: senderEmail,
                 pass: senderPassword
             }
         });
 
         // Verify email configuration
-        try {
-            console.log('Verifying email credentials...');
-            await transporter.verify();
-            console.log('Email credentials verified successfully');
-        } catch (error) {
-            console.error('Email verification failed:', error);
-            if (error.message.includes('Invalid login')) {
-                res.status(401).json({
-                    success: false,
-                    error: 'Invalid email or app password. Please check your credentials.'
-                });
-                return;
-            }
-            throw new Error(`Email verification failed: ${error.message}`);
-        }
+        await transporter.verify();
 
-        // Read and validate Excel data
-        const recipients = await readExcelFile(excelFile.path);
-        validateExcelStructure(recipients);
+        // Prepare attachments if any
+        const attachments = req.files.attachments?.map(file => ({
+            filename: file.originalname,
+            content: file.buffer
+        })) || [];
 
-        // Process attachments
-        const attachments = req.files.attachments?.map(file => {
-            uploadedFiles.push(file.path);
-            return {
-                filename: file.originalname,
-                path: file.path
-            };
-        }) || [];
-
-        // Send emails
         const results = [];
         let successCount = 0;
         let failureCount = 0;
 
+        // Send emails
         for (const recipient of recipients) {
             try {
                 const email = recipient.Email || recipient.email;
-                if (!email || !isValidEmail(email)) {
+                if (!email) {
                     results.push({
-                        email: email || 'Invalid',
+                        email: 'N/A',
                         status: 'skipped',
-                        message: 'Invalid email address'
+                        message: 'No email address found'
                     });
                     continue;
                 }
@@ -178,7 +106,7 @@ app.post('/send-emails', async (req, res) => {
 
                 await transporter.sendMail({
                     from: senderEmail,
-                    to: sanitizeEmail(email),
+                    to: email,
                     subject: subject,
                     text: personalizedMessage,
                     attachments: attachments
@@ -190,11 +118,11 @@ app.post('/send-emails', async (req, res) => {
                 });
                 successCount++;
 
-                // Rate limiting
+                // Add delay between emails
                 await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (error) {
                 results.push({
-                    email: recipient.Email || recipient.email,
+                    email: recipient.Email || recipient.email || 'N/A',
                     status: 'failed',
                     message: error.message
                 });
@@ -202,13 +130,10 @@ app.post('/send-emails', async (req, res) => {
             }
         }
 
-        // Clean up files
-        await Promise.all(uploadedFiles.map(file => 
-            fs.promises.unlink(file).catch(err => 
-                console.error(`Failed to delete file ${file}:`, err)
-            )
-        ));
+        // Close the transporter
+        transporter.close();
 
+        // Send response
         res.json({
             success: true,
             results,
@@ -221,42 +146,15 @@ app.post('/send-emails', async (req, res) => {
         });
 
     } catch (error) {
-        // Clean up files on error
-        await Promise.all(uploadedFiles.map(file =>
-            fs.promises.unlink(file).catch(console.error)
-        ));
-
+        console.error('Error:', error);
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message || 'Internal server error'
         });
-    } finally {
-        if (transporter) {
-            transporter.close();
-        }
     }
 });
 
-// Helper function to validate email format
-function isValidEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(String(email).toLowerCase());
-}
-
-// Ensure uploads directory exists
-const uploadsDir = process.env.NODE_ENV === 'production' 
-    ? '/tmp/uploads' 
-    : path.join(__dirname, 'uploads');
-
-if (!fs.existsSync(uploadsDir)){
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`Uploads directory: ${uploadsDir}`);
-});
-
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK' });
+    console.log(`Server running on port ${PORT}`);
 }); 

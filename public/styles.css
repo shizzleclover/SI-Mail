@@ -44,6 +44,13 @@ body {
     background-color: var(--bg);
     color: var(--text);
     line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 /* Theme Switcher Styles */
@@ -755,5 +762,52 @@ input:focus, textarea:focus {
         align-items: center;
         text-align: center;
     }
+}
+
+/* Footer Styles */
+.footer {
+    margin-top: auto;
+    padding: 20px;
+    text-align: center;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.signature {
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    padding: 0 4px;
+}
+
+.footer a {
+    color: var(--text-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    margin-left: 8px;
+}
+
+.footer a:hover {
+    color: var(--primary);
+}
+
+/* Make sure the footer stays at bottom */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
  

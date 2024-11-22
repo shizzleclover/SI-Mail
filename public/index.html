@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SI-Mail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link rel="icon" type="image/png" href="/favicon.png?v=2">
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="container">
+        <!-- Theme switcher -->
+        <div class="theme-switcher">
+            <button id="themeToggle" aria-label="Toggle theme">
+                <i class="fas fa-sun"></i>
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+
+        <!-- Add this after the theme switcher and before the main form -->
+        <h1><i class="fas fa-paper-plane"></i>SI-Mail</h1>
+        <div class="help-section card">
+            <div class="card-header">
+                <i class="fas fa-question-circle"></i>
+                <h2>How to Use</h2>
+            </div>
+            
+            <div class="help-content">
+                <div class="help-item">
+                    <h3><i class="fas fa-file-excel"></i> Excel File Structure</h3>
+                    <p>Your Excel file should contain the following columns:</p>
+                    <div class="excel-preview">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>john@example.com</td>
+                                    <td>John Doe</td>
+                                    <td>ABC Corp</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="help-list">
+                        <li><strong>Email</strong> (required): Recipient's email address</li>
+                        <li><strong>Name</strong> (optional): Used with {name} in template</li>
+                        <li><strong>Company</strong> (optional): Used with {company} in template</li>
+                    </ul>
+                </div>
+
+                <div class="help-item">
+                    <h3><i class="fas fa-key"></i> Getting an App Password</h3>
+                    <ol class="help-list">
+                        <li>Go to your Google Account settings</li>
+                        <li>Enable 2-Step Verification if not already enabled</li>
+                        <li>Go to Security → App Passwords</li>
+                        <li>Select "Mail" and your device</li>
+                        <li>Click "Generate"</li>
+                        <li>Use the 16-character password generated</li>
+                    </ol>
+                    <a href="https://support.google.com/accounts/answer/185833" 
+                       target="_blank" 
+                       class="help-link">
+                        <i class="fas fa-external-link-alt"></i>
+                        Detailed Google Guide
+                    </a>
+                </div>
+
+                <div class="help-item">
+                    <h3><i class="fas fa-shield-alt"></i> Security Notice</h3>
+                    <div class="security-notice">
+                        <i class="fas fa-lock"></i>
+                        <p>Your email and app password are used only for sending emails and are never stored on our servers. All credentials are cleared when you close or refresh the page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+       
+
+        <!-- Email Configuration Section -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user-circle"></i>
+                <h2>Email Configuration</h2>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <input type="email" id="senderEmail" required placeholder="your@gmail.com">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> App Password</label>
+                <div class="password-container">
+                    <input type="password" 
+                           id="senderPassword" 
+                           required 
+                           placeholder="Enter your app password">
+                    <button type="button" 
+                            class="password-toggle" 
+                            id="passwordToggle" 
+                            aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <a href="https://support.google.com/accounts/answer/185833" 
+                       target="_blank" 
+                       class="info-icon" 
+                       title="Learn how to get an App Password">
+                        <i class="fas fa-info-circle"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Content Section -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit"></i>
+                <h2>Email Content</h2>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-heading"></i> Subject</label>
+                <input type="text" id="subject" required placeholder="Enter email subject">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-comment-alt"></i> Message Template</label>
+                <textarea id="messageTemplate" rows="6" required placeholder="Enter your message here. Use {name} for recipient's name and {company} for company name."></textarea>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-upload"></i>
+                <h2>Files</h2>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-file-excel"></i> Recipients List (Excel)</label>
+                <div class="file-upload-container" id="fileUploadContainer">
+                    <i class="fas fa-file-excel file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        Drag and drop your Excel file here<br>
+                        or click to browse
+                    </div>
+                    <input type="file" id="excelFile" class="file-upload-input" accept=".xlsx,.xls" required>
+                    <div class="file-name" id="fileName"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-paperclip"></i> Attachments</label>
+                <div class="file-upload-container" id="attachmentContainer">
+                    <i class="fas fa-plus-circle file-upload-icon"></i>
+                    <div class="file-upload-text">
+                        Add attachments (Optional)<br>
+                        <span class="upload-hint">PDF, Images, Documents (Max 25MB)</span>
+                    </div>
+                    <input type="file" id="attachments" class="file-upload-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg">
+                    <div class="attachments-list" id="attachmentsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <button id="sendButton" class="send-button" onclick="sendEmails()">
+            <span class="button-content">
+                <i class="fas fa-paper-plane"></i>
+                <span class="button-text">Send Emails</span>
+            </span>
+            <span class="button-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Sending...</span>
+            </span>
+        </button>
+
+        <div class="progress-wrapper" id="progressWrapper" style="display: none;">
+            <div class="progress-status">
+                <div class="progress-text">Sending emails...</div>
+                <div class="progress-count" id="progressCount">0/0</div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+
+        <div class="results-container" id="results"></div>
+    </div>
+
+    <script>
+        // Add this new code to handle file upload UI
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileUploadContainer = document.getElementById('fileUploadContainer');
+            const fileInput = document.getElementById('excelFile');
+            const fileNameDisplay = document.getElementById('fileName');
+
+            // Handle drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileUploadContainer.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadContainer.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadContainer.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                fileUploadContainer.classList.add('drag-over');
+            }
+
+            function unhighlight(e) {
+                fileUploadContainer.classList.remove('drag-over');
+            }
+
+            fileUploadContainer.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                updateFileName(files[0]);
+            }
+
+            // Handle file selection through click
+            fileInput.addEventListener('change', function(e) {
+                updateFileName(this.files[0]);
+            });
+
+            function updateFileName(file) {
+                if (file) {
+                    fileNameDisplay.textContent = file.name;
+                    fileNameDisplay.classList.add('visible');
+                } else {
+                    fileNameDisplay.textContent = '';
+                    fileNameDisplay.classList.remove('visible');
+                }
+            }
+
+            // Add attachment handling
+            const attachmentInput = document.getElementById('attachments');
+            const attachmentsList = document.getElementById('attachmentsList');
+            const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB max size
+
+            attachmentInput.addEventListener('change', handleAttachments);
+
+            function handleAttachments(e) {
+                const files = Array.from(e.target.files);
+                
+                files.forEach(file => {
+                    if (file.size > MAX_FILE_SIZE) {
+                        alert(`File ${file.name} is too large. Maximum size is 25MB.`);
+                        return;
+                    }
+                    
+                    addAttachmentToList(file);
+                });
+            }
+
+            function addAttachmentToList(file) {
+                const item = document.createElement('div');
+                item.className = 'attachment-item';
+                
+                // Choose icon based on file type
+                const iconClass = getFileIcon(file.type);
+                
+                item.innerHTML = `
+                    <i class="fas ${iconClass} attachment-icon"></i>
+                    <span class="attachment-name" title="${file.name}">${file.name}</span>
+                    <i class="fas fa-times attachment-remove"></i>
+                `;
+                
+                // Handle remove button
+                item.querySelector('.attachment-remove').addEventListener('click', () => {
+                    item.remove();
+                });
+                
+                attachmentsList.appendChild(item);
+            }
+
+            function getFileIcon(mimeType) {
+                if (mimeType.startsWith('image/')) return 'fa-image';
+                if (mimeType.includes('pdf')) return 'fa-file-pdf';
+                if (mimeType.includes('word')) return 'fa-file-word';
+                if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
+                return 'fa-file';
+            }
+        });
+
+        // Add this function to handle the button state
+        function toggleButtonLoading(loading) {
+            const button = document.getElementById('sendButton');
+            button.disabled = loading;
+            if (loading) {
+                button.classList.add('loading');
+            } else {
+                button.classList.remove('loading');
+            }
+        }
+
+        // Update the sendEmails function
+        async function sendEmails() {
+            const sendButton = document.getElementById('sendButton');
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressBar = document.getElementById('progressBar');
+            const progressCount = document.getElementById('progressCount');
+
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+
+            try {
+                // Show loading state
+                toggleButtonLoading(true);
+                progressWrapper.style.display = 'block';
+                progressBar.style.width = '0%';
+
+                // Create FormData
+                const formData = new FormData();
+                formData.append('excelFile', document.getElementById('excelFile').files[0]);
+                formData.append('subject', document.getElementById('subject').value.trim());
+                formData.append('messageTemplate', document.getElementById('messageTemplate').value.trim());
+                formData.append('senderEmail', document.getElementById('senderEmail').value.trim());
+                formData.append('senderPassword', document.getElementById('senderPassword').value.trim());
+
+                // Append attachments if any
+                const attachments = document.getElementById('attachments').files;
+                Array.from(attachments).forEach(file => {
+                    formData.append('attachments', file);
+                });
+
+                // Send request
+                const response = await fetch('/send-emails', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Invalid email or app password. Please check your credentials.');
+                    } else {
+                        throw new Error(data.error || 'Failed to send emails');
+                    }
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let completed = 0;
+                    const total = data.results.length;
+
+                    // Process results
+                    for (const result of data.results) {
+                        completed++;
+                        const progress = (completed / total) * 100;
+                        
+                        // Update progress
+                        progressBar.style.width = `${progress}%`;
+                        progressCount.textContent = `${completed}/${total}`;
+
+                        // Show result notification
+                        if (result.status === 'success') {
+                            showToast('success', 'Success', `Email sent to ${result.email}`);
+                        } else if (result.status === 'failed') {
+                            showToast('error', 'Failed', `Failed to send to ${result.email}: ${result.message}`);
+                        } else {
+                            showToast('warning', 'Skipped', `Skipped ${result.email}: ${result.message}`);
+                        }
+
+                        // Small delay between notifications
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                    // Show summary
+                    showToast('success', 'Complete', 
+                        `Sent: ${data.summary.success}, ` +
+                        `Failed: ${data.summary.failed}, ` +
+                        `Skipped: ${data.summary.skipped}`
+                    );
+                } else {
+                    throw new Error(data.error || 'Failed to send emails');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('error', 'Error', error.message);
+                
+                // Add specific help for authentication errors
+                if (error.message.includes('Invalid email or app password')) {
+                    showToast('info', 'Help', 'Make sure you\'re using an App Password from Google Account settings, not your regular password.');
+                }
+            } finally {
+                // Reset UI
+                toggleButtonLoading(false);
+                setTimeout(() => {
+                    progressWrapper.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 1000);
+            }
+        }
+
+        // Add toast notification function if not already present
+        function showToast(type, title, message) {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon;
+            switch(type) {
+                case 'error':
+                    icon = 'fa-exclamation-circle';
+                    break;
+                case 'success':
+                    icon = 'fa-check-circle';
+                    break;
+                case 'warning':
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                default:
+                    icon = 'fa-info-circle';
+            }
+            
+            toast.innerHTML = `
+                <i class="fas ${icon} toast-icon"></i>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <div class="toast-progress">
+                    <div class="toast-progress-bar"></div>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove toast after animation
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        // Make sure validateForm function is present
+        function validateForm() {
+            const errors = [];
+            const email = document.getElementById('senderEmail').value.trim();
+            const password = document.getElementById('senderPassword').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const message = document.getElementById('messageTemplate').value.trim();
+            const excelFile = document.getElementById('excelFile').files[0];
+            const attachments = document.getElementById('attachments').files;
+
+            // Email validation
+            if (!email) {
+                errors.push("Email address is required");
+            } else if (!isValidEmail(email)) {
+                errors.push("Please enter a valid email address");
+            } else if (!email.toLowerCase().endsWith('@gmail.com')) {
+                errors.push("Only Gmail addresses are supported");
+            }
+
+            // Password validation - only check if it's empty
+            if (!password) {
+                errors.push("App Password is required");
+            }
+            // Remove the length validation since app passwords can vary
+
+            // Subject validation
+            if (!subject) {
+                errors.push("Email subject is required");
+            }
+
+            // Message validation
+            if (!message) {
+                errors.push("Message template is required");
+            }
+
+            // Excel file validation
+            if (!excelFile) {
+                errors.push("Please upload an Excel file with recipient details");
+            } else {
+                const fileExt = excelFile.name.split('.').pop().toLowerCase();
+                if (!['xlsx', 'xls'].includes(fileExt)) {
+                    errors.push("Invalid file format. Please upload an Excel file (.xlsx or .xls)");
+                }
+                if (excelFile.size > 25 * 1024 * 1024) {
+                    errors.push("Excel file size exceeds 25MB limit");
+                }
+            }
+
+            // Attachments validation
+            let totalSize = 0;
+            Array.from(attachments).forEach(file => {
+                totalSize += file.size;
+            });
+            if (totalSize > 25 * 1024 * 1024) {
+                errors.push("Total attachments size exceeds 25MB limit");
+            }
+
+            if (errors.length > 0) {
+                errors.forEach(error => showToast('error', 'Validation Error', error));
+                return false;
+            }
+
+            return true;
+        }
+
+        // Make sure isValidEmail function is present
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(String(email).toLowerCase());
+        }
+
+        // Add this to handle file selection display
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                document.getElementById('fileName').textContent = fileName;
+                document.getElementById('fileName').classList.add('visible');
+            }
+        });
+
+        // Theme toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            
+            // Function to set theme
+            function setTheme(theme) {
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            }
+
+            // Check for saved theme preference or default to light
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+
+            // Toggle theme when button is clicked
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+            });
+        });
+
+        // Password toggle functionality
+        document.getElementById('passwordToggle').addEventListener('click', function() {
+            const passwordInput = document.getElementById('senderPassword');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    </script>
+</body>
+</html> 

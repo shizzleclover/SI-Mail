@@ -1,0 +1,759 @@
+:root {
+    /* Light theme */
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --success: #22c55e;
+    --error: #ef4444;
+    --bg: #ffffff;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --input-bg: #f9fafb;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --primary-rgb: 79, 70, 229;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    --primary: #818cf8;
+    --primary-dark: #6366f1;
+    --bg: #111827;
+    --text: #f9fafb;
+    --text-light: #9ca3af;
+    --input-bg: #1f2937;
+    --card-bg: #1f2937;
+    --border: #374151;
+    --primary-rgb: 129, 140, 248;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body { 
+    max-width: 800px; 
+    margin: 0 auto; 
+    padding: 20px; 
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* Theme Switcher Styles */
+.theme-switcher {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.theme-switcher button {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.theme-switcher button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.theme-switcher .fa-sun {
+    display: none;
+    color: #fbbf24;
+}
+
+.theme-switcher .fa-moon {
+    display: block;
+    color: #6b7280;
+}
+
+[data-theme="dark"] .theme-switcher .fa-sun {
+    display: block;
+}
+
+[data-theme="dark"] .theme-switcher .fa-moon {
+    display: none;
+}
+
+h1 {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeIn 0.5s ease;
+}
+
+.instruction {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    animation: slideUp 0.5s ease;
+}
+
+.instruction h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+/* Update form styles */
+.form-group { 
+    margin-bottom: 1.5rem;
+    animation: slideUp 0.5s ease;
+}
+
+label { 
+    display: block; 
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+input, textarea { 
+    width: 100%; 
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    outline: none;
+}
+
+/* Update button styles */
+button { 
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Add animation for theme transition */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Add the theme toggle JavaScript */
+ 
+/* Add these new styles */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-header i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text);
+}
+
+h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+h1 i {
+    font-size: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.form-group label i {
+    color: var(--primary);
+}
+
+input, textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+    outline: none;
+}
+
+.password-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-container input {
+    padding-right: 80px; /* Space for both buttons */
+}
+
+.password-toggle {
+    position: absolute;
+    right: 40px; /* Position before the info icon */
+    background: none;
+    border: none;
+    padding: 8px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: var(--primary);
+}
+
+.info-icon {
+    position: absolute;
+    right: 12px;
+    color: var(--text-light);
+    transition: color 0.2s ease;
+}
+
+.info-icon:hover {
+    color: var(--primary);
+}
+
+.send-button {
+    position: relative;
+    overflow: hidden;
+}
+
+.send-button .button-content,
+.send-button .button-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.send-button .button-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.send-button.loading .button-content {
+    opacity: 0;
+}
+
+.send-button.loading .button-loading {
+    opacity: 1;
+}
+
+.send-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.upload-hint {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+/* Update file upload styles */
+.file-upload-container {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-upload-container:hover {
+    border-color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+
+.file-upload-icon {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.file-upload-text {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+
+/* Progress bar styles */
+.progress-container {
+    background: var(--input-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.progress-bar {
+    height: 8px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Results section */
+.results {
+    margin-top: 1rem;
+}
+
+.success {
+    color: var(--success);
+}
+
+.error {
+    color: var(--error);
+}
+
+/* Add these new styles */
+.progress-wrapper {
+    margin-top: 1.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.progress-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progress-text {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.progress-count {
+    color: var(--primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.progress-container {
+    background: var(--input-bg);
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    transition: width 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.results-container {
+    margin-top: 1.5rem;
+}
+
+.result-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: slideIn 0.3s ease;
+}
+
+.result-item.success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.result-item.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.result-item i {
+    font-size: 1.1rem;
+}
+
+.result-item.success i {
+    color: var(--success);
+}
+
+.result-item.error i {
+    color: var(--error);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Add these new styles for the toast notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    min-width: 300px;
+    max-width: 400px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: var(--shadow-lg);
+    animation: slideInRight 0.3s ease, fadeOut 0.3s ease 4.7s;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.error {
+    border-left: 4px solid var(--error);
+}
+
+.toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.warning {
+    border-left: 4px solid #f59e0b;
+}
+
+.toast-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.toast.error .toast-icon {
+    color: var(--error);
+}
+
+.toast.success .toast-icon {
+    color: var(--success);
+}
+
+.toast.warning .toast-icon {
+    color: #f59e0b;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+
+.toast-message {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(var(--primary-rgb), 0.1);
+}
+
+.toast-progress-bar {
+    height: 100%;
+    background: var(--primary);
+    animation: progress 5s linear;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes progress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* Help Section Styles */
+.help-section {
+    margin-bottom: 2rem;
+}
+
+.help-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.help-item {
+    padding: 1rem;
+    background: var(--input-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.help-item h3 {
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.help-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.help-list li {
+    margin-bottom: 0.5rem;
+    color: var(--text);
+}
+
+.excel-preview {
+    margin: 1rem 0;
+    overflow-x: auto;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+
+.excel-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.excel-preview th,
+.excel-preview td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.excel-preview th {
+    background: var(--primary);
+    color: white;
+}
+
+.excel-preview td {
+    color: var(--text);
+}
+
+.help-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.help-link:hover {
+    text-decoration: underline;
+}
+
+.security-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 6px;
+}
+
+.security-notice i {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-top: 0.2rem;
+}
+
+.security-notice p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .excel-preview {
+        margin: 1rem -1rem;
+        border-radius: 0;
+    }
+    
+    .help-item {
+        padding: 0.75rem;
+    }
+    
+    .security-notice {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+ 

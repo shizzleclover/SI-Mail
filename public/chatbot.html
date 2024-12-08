@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Generator Chatbot</title>
+    <link rel="stylesheet" href="styles2.css">
+</head>
+<body>
+    <h1>Email Generator Chatbot</h1>
+    <div id="chat-container">
+        <textarea id="prompt" placeholder="Enter a prompt, e.g., 'Write a follow-up email for a job interview'"></textarea>
+        <button id="generate-btn">Generate Email</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt').value;
+            const output = document.getElementById('output');
+
+            output.innerHTML = 'Generating...';
+
+            try {
+                const response = await fetch('/generate-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    output.innerHTML = `<pre>${data.emailContent}</pre>`;
+                } else {
+                    output.innerHTML = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                output.innerHTML = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

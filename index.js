@@ -6,6 +6,53 @@ const path = require('path');
 const fs = require('fs').promises; // Use promises version
 const app = express();
 
+//openai
+const { Configuration, OpenAIApi } = require('openai');
+const { error } = require('console');
+const { Messages } = require('openai/src/resources/beta/threads/messages.js');
+require('dotenv').config();
+
+//!Init OpenAi config
+const configuration = new({
+    apiKey: process.env.OPENAI_PI_KEY, 
+});
+const openai = new OpenAIApi(configuration);
+
+// New route for the chatbot to generate emails
+app.post('/generate-email', async (req, res) =>{
+    try{
+        const { prompt } = req.body;
+        if (!prompt) {
+            return res.status(400).json({success: false, error: 'Prompt is required'})
+        }
+
+        //OPEN ai call
+        const response = await openai.createChatCompletion({
+            model: 'gpt-3.5-turbo',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are an assistant that generates professional and engaging email content.'
+                },
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ],
+            max_tokens: 500,
+        });
+        const generatedEmail = response.data.choices[0].message.content;
+res.json({ success: true, emailContent: generatedEmail });
+
+    } catch (error) {
+        console.error('Error generating email:', error);
+        res.status(500).json({ success: false, error: 'Failed to generate email'});
+    }
+});
+
+//!AI integration
+
+
 // Basic middleware
 app.use(express.json());
 app.use(express.static('public'));

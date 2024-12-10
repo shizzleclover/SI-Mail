@@ -3,14 +3,21 @@ const nodemailer = require('nodemailer');
 const XLSX = require('xlsx');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises; // Use promises version
+const fs = require('fs').promises;
 const app = express();
 
 // Basic middleware
 app.use(express.json());
 app.use(express.static('public'));
 
-// Configure multer for memory storage instead of disk
+// Gemini API configuration
+const API_KEY = process.env.GEMINI_API_KEY;
+const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent`;
+
+// Store chat history
+let chatHistory = [];
+
+// Configure multer for memory storage
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
@@ -33,9 +40,87 @@ async function readExcelBuffer(buffer) {
     }
 }
 
+// Gemini chat function
+async function generateBotResponse(userMessage, fileData = null) {
+    try {
+        const messageParts = [{ text: userMessage }];
+        if (fileData) {
+            messageParts.push({ inline_data: fileData });
+        }
+
+        chatHistory.push({
+            role: "user",
+            parts: messageParts
+        });
+
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${API_KEY}`
+            },
+            body: JSON.stringify({
+                contents: chatHistory
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error.message);
+        }
+
+        const data = await response.json();
+        const botResponse = data.candidates[0].content.parts[0].text.trim();
+
+        chatHistory.push({
+            role: "model",
+            parts: [{ text: botResponse }]
+        });
+
+        return botResponse;
+
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        throw error;
+    }
+}
+
+// Chat endpoint
+app.post('/chat', async (req, res) => {
+    try {
+        const { message, fileData } = req.body;
+        
+        if (!message) {
+            throw new Error('Message is required');
+        }
+
+        const botResponse = await generateBotResponse(message, fileData);
+        
+        res.json({
+            success: true,
+            response: botResponse
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Internal server error'
+        });
+    }
+});
+
+// Clear chat history endpoint
+app.post('/clear-chat', (req, res) => {
+    chatHistory = [];
+    res.json({
+        success: true,
+        message: 'Chat history cleared'
+    });
+});
+
+// Email sending endpoint
 app.post('/send-emails', async (req, res) => {
     try {
-        // Handle file upload
         await new Promise((resolve, reject) => {
             upload(req, res, (err) => {
                 if (err) reject(err);
@@ -43,26 +128,22 @@ app.post('/send-emails', async (req, res) => {
             });
         });
 
-        // Validate request
         if (!req.files?.excelFile?.[0]?.buffer) {
             throw new Error('No Excel file uploaded');
         }
 
         const { subject, messageTemplate, senderEmail, senderPassword } = req.body;
 
-        // Validate other fields
         if (!subject || !messageTemplate || !senderEmail || !senderPassword) {
             throw new Error('Missing required fields');
         }
 
-        // Read Excel file from buffer
         const recipients = await readExcelBuffer(req.files.excelFile[0].buffer);
         
         if (!recipients || recipients.length === 0) {
             throw new Error('No recipients found in Excel file');
         }
 
-        // Create email transporter
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -71,10 +152,8 @@ app.post('/send-emails', async (req, res) => {
             }
         });
 
-        // Verify email configuration
         await transporter.verify();
 
-        // Prepare attachments if any
         const attachments = req.files.attachments?.map(file => ({
             filename: file.originalname,
             content: file.buffer
@@ -84,7 +163,6 @@ app.post('/send-emails', async (req, res) => {
         let successCount = 0;
         let failureCount = 0;
 
-        // Send emails
         for (const recipient of recipients) {
             try {
                 const email = recipient.Email || recipient.email;
@@ -118,7 +196,6 @@ app.post('/send-emails', async (req, res) => {
                 });
                 successCount++;
 
-                // Add delay between emails
                 await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (error) {
                 results.push({
@@ -130,10 +207,8 @@ app.post('/send-emails', async (req, res) => {
             }
         }
 
-        // Close the transporter
         transporter.close();
 
-        // Send response
         res.json({
             success: true,
             results,
@@ -157,7 +232,4 @@ app.post('/send-emails', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-}); 
-
-
-//! IMplementing Gemini?
+});
